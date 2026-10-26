@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="te"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ALCHEM Attendance</title>
+<style>
+:root{--g:#1f3d2b;--g2:#2e5a40;--gold:#b9822f;--bg:#f4ecd8;--card:#fffaf0;--tx:#2a2218;--mut:#7a6d58;--ok:#2e7d4f;--bad:#b3402f;--ln:#e2d6b8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14201a;--card:#1c2c23;--tx:#f1e8d0;--mut:#a89c82;--ln:#2f4338;--g:#0f1d15}}
+:root[data-theme="dark"]{--bg:#14201a;--card:#1c2c23;--tx:#f1e8d0;--mut:#a89c82;--ln:#2f4338;--g:#0f1d15}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--tx);font-family:Georgia,serif}
+body{max-width:520px;margin:0 auto;padding-bottom:84px;min-height:100vh}
+header{background:var(--g);color:#f4ecd8;padding:16px 18px;border-bottom:4px solid var(--gold)}
+header h1{margin:0;font-size:25px;letter-spacing:.14em}header p{margin:2px 0 0;font-size:13px;color:#d9c48e;font-style:italic}
+main{padding:14px}nav{position:fixed;bottom:0;left:0;right:0;max-width:520px;margin:0 auto;display:flex;background:var(--g);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;background:none;border:0;color:#d9c48e;padding:14px 2px;font:inherit;font-size:14px}nav button.on{color:#fff;box-shadow:inset 0 3px 0 var(--gold)}
+.hid{display:none}h2{font-size:18px;margin:2px 0 10px}
+input,select,textarea{width:100%;padding:12px;border-radius:10px;border:1px solid var(--ln);background:var(--card);color:var(--tx);font:inherit;font-size:16px;margin-bottom:10px}
+.btn{display:block;width:100%;text-align:center;padding:14px 8px;border-radius:10px;border:2px solid var(--g2);background:var(--g);color:#f4ecd8;font:inherit;font-size:16px;margin-bottom:8px}
+.btn.alt{background:transparent;color:var(--tx);border-color:var(--gold)}
+.li{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--ln)}
+.li .n{flex:1}.li small{color:var(--mut);display:block}
+.av{width:44px;height:44px;border-radius:50%;background:var(--g2);color:#f4ecd8;display:grid;place-items:center;flex:none;object-fit:cover}
+.tag{padding:2px 9px;border-radius:99px;font-size:12px;color:#fff;background:var(--ok);white-space:nowrap}.tag.h{background:var(--gold)}.tag.a{background:var(--bad)}
+.sel{padding:12px;border:2px solid var(--gold);border-radius:12px;background:var(--card);margin-bottom:10px}
+.msg{padding:12px;border-radius:10px;background:var(--card);border:1px solid var(--ln);margin-top:8px}
+.seg{display:flex;gap:6px;margin-bottom:10px}.seg button{flex:1;padding:10px;border-radius:8px;border:1px solid var(--gold);background:none;color:var(--tx);font:inherit}.seg button.on{background:var(--gold);color:#fff}
+.wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13px;min-width:460px}
+th{background:var(--g);color:#f4ecd8;text-align:left;padding:8px}td{padding:8px;border-bottom:1px solid var(--ln)}tfoot td{font-weight:700}
+.note{color:var(--mut);font-size:13px;margin-top:10px}
+</style><script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.13/dist/face-api.js"></script>
+</head><body>
+<header><h1>ALCHEM</h1><p>Tobacco Traders · హాజరు & జీతం</p></header>
+<main>
+<section id="p-auto"><h2>Auto punch</h2>
+<video id="vd" playsinline muted style="width:100%;border-radius:12px;background:#000;transform:scaleX(-1)"></video>
+<button class="btn" style="margin-top:8px" onclick="autoStart()">Camera start</button>
+<div id="aout"></div>
+<p class="note">కెమెరా ముందు నిలబడండి. ముఖం గుర్తించి IN / OUT దానంతట అదే నమోదవుతుంది.</p></section>
+<section id="p-punch" class="hid">
+<h2>Punch వేయండి</h2>
+<input id="q" placeholder="పేరు లేదా ID వెతకండి" oninput="rPick()">
+<div id="pick"></div>
+<div id="selbox"></div>
+<div id="out"></div>
+</section>
+<section id="p-today" class="hid"><h2>ఈ రోజు</h2><div id="tl"></div></section>
+<section id="p-rep" class="hid">
+<h2>Report</h2>
+<div class="seg"><button id="m-day" onclick="setMode('day')">Day</button><button id="m-week" class="on" onclick="setMode('week')">Week</button><button id="m-month" onclick="setMode('month')">Month</button></div>
+<input type="date" id="rd" onchange="rRep()">
+<div class="wrap"><table><thead><tr><th>ID</th><th>Name</th><th>Full</th><th>Half</th><th>Absent</th><th>₹</th></tr></thead><tbody id="tb"></tbody><tfoot id="tf"></tfoot></table></div>
+<button class="btn alt" style="margin-top:12px" onclick="try{window.print()}catch(e){}">Print / PDF</button>
+<p class="note">Full day (IN + OUT) = ₹600. Half day (IN మాత్రమే) = ₹300. Punch లేకపోతే ₹0.</p>
+</section>
+<section id="p-staff" class="hid">
+<h2>Staff</h2>
+<textarea id="bulk" rows="5" placeholder="ఒక్కో line కి ఒక్క పేరు (600 మందిని ఒకేసారి paste చేయవచ్చు)"></textarea>
+<input id="rate" type="number" value="600" placeholder="Full day rate">
+<button class="btn" onclick="addStaff()">Staff add చేయండి</button>
+<div id="enr"></div><input id="sq" placeholder="Staff వెతకండి" oninput="rStaff()"><div id="sl"></div>
+</section>
+</main>
+<nav><button class="on" onclick="tab('auto',this)">Auto</button><button onclick="tab('punch',this)">Manual</button><button onclick="tab('today',this)">Today</button><button onclick="tab('rep',this)">Report</button><button onclick="tab('staff',this)">Staff</button></nav>
+<script>
+var S={emps:[],punches:[]},mode="week",sel=null,unlocked=false;
+try{var raw=localStorage.getItem("alchem");if(raw)S=JSON.parse(raw)}catch(e){}
+if(!S.emps.length){["Ravi Kumar","Suresh Reddy","Lakshmi Devi","Venkat Rao","Anitha"].forEach(function(n,i){S.emps.push({id:"A"+(101+i),name:n,rate:600})})}
+function save(){try{localStorage.setItem("alchem",JSON.stringify(S))}catch(e){document.getElementById("out").innerHTML='<div class="msg">Storage నిండింది. పాత photos తీసేయండి.</div>'}}
+function dk(d){var x=new Date(d);return x.getFullYear()+"-"+("0"+(x.getMonth()+1)).slice(-2)+"-"+("0"+x.getDate()).slice(-2)}
+function tm(t){return new Date(t).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"})}
+function dayP(id,d){return S.punches.filter(function(p){return p.id==id&&p.d==d})}
+function tab(t,b){stopCam();["auto","punch","today","rep","staff"].forEach(function(x){document.getElementById("p-"+x).className=x==t?"":"hid"});
+document.querySelectorAll("nav button").forEach(function(x){x.className=""});b.className="on";
+if(t=="rep"||t=="staff"){lock(function(){show(t)},t,b)}else show(t)}
+function show(t){if(t=="today")rToday();if(t=="rep")rRep();if(t=="staff")rStaff()}
+function lock(cb){
+if(unlocked)return cb();
+var fallback=function(){var p=prompt("Admin PIN (default 1234)");if(p=="1234"){unlocked=true;cb()}else{alert("PIN తప్పు")}};
+try{navigator.credentials.create({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(16)),rp:{name:"ALCHEM"},user:{id:new Uint8Array(4),name:"admin",displayName:"Admin"},pubKeyCredParams:[{type:"public-key",alg:-7}],authenticatorSelection:{authenticatorAttachment:"platform",userVerification:"required"},timeout:30000}}).then(function(){unlocked=true;cb()}).catch(fallback)}catch(e){fallback()}}
+function rPick(){
+var q=document.getElementById("q").value.toLowerCase(),h="";
+if(!q){document.getElementById("pick").innerHTML='<p class="note">పేరు టైప్ చేసి మీ పేరు ఎంచుకోండి.</p>';return}
+S.emps.filter(function(e){return(e.name+e.id).toLowerCase().indexOf(q)>=0}).slice(0,6).forEach(function(e){h+='<div class="li" onclick="pickE(\''+e.id+'\')"><div class="av">'+e.name[0]+'</div><div class="n">'+e.name+'<small>'+e.id+'</small></div></div>'});
+document.getElementById("pick").innerHTML=h||'<p class="note">దొరకలేదు.</p>'}
+function pickE(id){sel=S.emps.filter(function(e){return e.id==id})[0];
+var n=dayP(id,dk(Date.now())).length;
+document.getElementById("pick").innerHTML="";document.getElementById("q").value="";
+document.getElementById("selbox").innerHTML='<div class="sel"><b>'+sel.name+'</b> ('+sel.id+')<br><small>తదుపరి punch: '+(n==0?"IN":"OUT")+'</small></div><label class="btn">📷 Face photo తీసి punch వేయండి<input type="file" accept="image/*" capture="user" class="hid" onchange="photo(this)"></label><button class="btn alt" onclick="punch(null)">Photo లేకుండా punch</button>'}
+function photo(inp){var f=inp.files[0];if(!f)return;var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var c=document.createElement("canvas");c.width=c.height=72;var s=Math.min(im.width,im.height);c.getContext("2d").drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,72,72);punch(c.toDataURL("image/jpeg",.5))};im.src=r.result};r.readAsDataURL(f)}
+function punch(ph){
+if(!sel)return;var now=Date.now(),d=dk(now),n=dayP(sel.id,d).length,k=n==0?"IN":"OUT";
+S.punches.push({id:sel.id,d:d,t:now,k:k,ph:ph});
+var cut=dk(now-7*864e5);S.punches.forEach(function(p){if(p.d<cut)p.ph=null});save();
+document.getElementById("selbox").innerHTML="";
+document.getElementById("out").innerHTML='<div class="msg"><b>'+sel.name+'</b><br>'+k+' నమోదైంది · '+tm(now)+'</div>';sel=null}
+function stat(id,d){var n=dayP(id,d).length;return n==0?"A":(n==1?"H":"F")}
+function rToday(){var d=dk(Date.now()),h="";
+S.emps.forEach(function(e){var ps=dayP(e.id,d),s=stat(e.id,d),ph=ps.filter(function(p){return p.ph})[0];
+h+='<div class="li">'+(ph?'<img class="av" src="'+ph.ph+'">':'<div class="av">'+e.name[0]+'</div>')+'<div class="n">'+e.name+'<small>'+e.id+' · '+ps.map(function(p){return p.k+" "+tm(p.t)}).join(" · ")+'</small></div><span class="tag '+(s=="A"?"a":s=="H"?"h":"")+'">'+(s=="A"?"Absent":s=="H"?"Half ₹"+e.rate/2:"Full ₹"+e.rate)+'</span></div>'});
+document.getElementById("tl").innerHTML=h}
+function setMode(m){mode=m;["day","week","month"].forEach(function(x){document.getElementById("m-"+x).className=x==m?"on":""});rRep()}
+function range(){var v=document.getElementById("rd").value||dk(Date.now()),b=new Date(v+"T00:00:00"),a,z;
+if(mode=="day"){a=z=b}else if(mode=="week"){var w=(b.getDay()+6)%7;a=new Date(b);a.setDate(b.getDate()-w);z=new Date(a);z.setDate(a.getDate()+6)}else{a=new Date(b.getFullYear(),b.getMonth(),1);z=new Date(b.getFullYear(),b.getMonth()+1,0)}
+var ds=[],today=dk(Date.now());for(var x=new Date(a);x<=z;x.setDate(x.getDate()+1)){var k=dk(x);if(k<=today)ds.push(k)}return ds}
+function rRep(){var ds=range(),h="",tf=0,th=0,tt=0;
+S.emps.forEach(function(e){var f=0,hf=0;ds.forEach(function(d){var s=stat(e.id,d);if(s=="F")f++;else if(s=="H")hf++});
+var amt=f*e.rate+hf*e.rate/2;tf+=f;th+=hf;tt+=amt;
+h+="<tr><td>"+e.id+"</td><td>"+e.name+"</td><td>"+f+"</td><td>"+hf+"</td><td>"+(ds.length-f-hf)+"</td><td>"+amt+"</td></tr>"});
+document.getElementById("tb").innerHTML=h;
+document.getElementById("tf").innerHTML="<tr><td colspan=2>Total ("+ds.length+" రోజులు)</td><td>"+tf+"</td><td>"+th+"</td><td></td><td>₹"+tt+"</td></tr>"}
+function addStaff(){var names=document.getElementById("bulk").value.split("\n").map(function(s){return s.trim()}).filter(Boolean),r=+document.getElementById("rate").value||600;
+names.forEach(function(n){var id="A"+(101+S.emps.length);S.emps.push({id:id,name:n,rate:r})});
+document.getElementById("bulk").value="";save();rStaff()}
+
+var MP="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.13/model/",ready=false,stream=null,lastP={},enrId=null,enrN=0,enrD=[];
+function stopCam(){if(stream){stream.getTracks().forEach(function(t){t.stop()});stream=null}}
+async function loadM(msgEl){
+if(ready)return;if(typeof faceapi=="undefined")throw new Error("Face library load కాలేదు. Internet / https తనిఖీ చేయండి.");
+msgEl.innerHTML='<div class="msg">Face models load అవుతున్నాయి…</div>';
+await faceapi.nets.tinyFaceDetector.loadFromUri(MP);await faceapi.nets.faceLandmark68Net.loadFromUri(MP);await faceapi.nets.faceRecognitionNet.loadFromUri(MP);ready=true}
+async function cam(v){stopCam();stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"},audio:false});v.srcObject=stream;await v.play()}
+async function desc(v){var r=await faceapi.detectSingleFace(v,new faceapi.TinyFaceDetectorOptions({inputSize:224,scoreThreshold:.5})).withFaceLandmarks().withFaceDescriptor();return r?Array.from(r.descriptor).map(function(x){return Math.round(x*1000)/1000}):null}
+function dist(a,b){var s=0;for(var i=0;i<a.length;i++){var x=a[i]-b[i];s+=x*x}return Math.sqrt(s)}
+function match(d){var best=null,bd=9;S.emps.forEach(function(e){(e.fd||[]).forEach(function(f){var x=dist(d,f);if(x<bd){bd=x;best=e}})});return bd<0.5?best:null}
+async function autoStart(){var o=document.getElementById("aout"),v=document.getElementById("vd");
+try{await loadM(o);await cam(v);o.innerHTML='<div class="msg">Camera ready. ముఖం చూపించండి.</div>';autoTick()}catch(e){o.innerHTML='<div class="msg">'+(e.message||"Camera permission ఇవ్వండి")+'</div>'}}
+async function autoTick(){var v=document.getElementById("vd");if(!stream)return;
+try{var d=await desc(v);if(d){var e=match(d);var o=document.getElementById("aout");
+if(e)autoPunch(e,v);else o.innerHTML='<div class="msg">ముఖం గుర్తుపట్టలేదు. Staff లో face enroll చేయండి.</div>'}}catch(x){}
+if(stream)setTimeout(autoTick,700)}
+function autoPunch(e,v){var now=Date.now(),d=dk(now),ps=dayP(e.id,d),o=document.getElementById("aout");
+if(ps.length&&now-ps[ps.length-1].t<120000){o.innerHTML='<div class="msg"><b>'+e.name+'</b><br>ఇప్పటికే punch అయింది ('+tm(ps[ps.length-1].t)+')</div>';return}
+var k=ps.length==0?"IN":"OUT",c=document.createElement("canvas");c.width=c.height=72;var sz=Math.min(v.videoWidth,v.videoHeight);
+c.getContext("2d").drawImage(v,(v.videoWidth-sz)/2,(v.videoHeight-sz)/2,sz,sz,0,0,72,72);
+S.punches.push({id:e.id,d:d,t:now,k:k,ph:c.toDataURL("image/jpeg",.5)});save();
+o.innerHTML='<div class="msg"><b>'+e.name+'</b> ('+e.id+')<br>'+k+' నమోదైంది · '+tm(now)+'</div>'}
+function rStaff(){var q=(document.getElementById("sq").value||"").toLowerCase(),L=S.emps.filter(function(e){return(e.name+e.id).toLowerCase().indexOf(q)>=0});
+document.getElementById("sl").innerHTML='<p class="note">మొత్తం '+S.emps.length+' మంది · face enroll అయినవారు '+S.emps.filter(function(e){return e.fd&&e.fd.length}).length+'</p>'+L.slice(0,30).map(function(e){return'<div class="li"><div class="av">'+e.name[0]+'</div><div class="n">'+e.name+'<small>'+e.id+' · ₹'+e.rate+'/day</small></div><button class="tag '+(e.fd&&e.fd.length?'':'h')+'" style="border:0" onclick="enrStart(\''+e.id+'\')">'+(e.fd&&e.fd.length?'Re-enroll':'Face enroll')+'</button></div>'}).join("")}
+async function enrStart(id){enrId=id;enrN=0;enrD=[];var el=document.getElementById("enr"),e=S.emps.filter(function(x){return x.id==id})[0];
+el.innerHTML='<div class="sel"><b>'+e.name+'</b><video id="ev" playsinline muted style="width:100%;border-radius:10px;background:#000;margin:8px 0;transform:scaleX(-1)"></video><div id="em"></div><button class="btn" onclick="enrCap()">Face capture (0/3)</button></div>';
+try{await loadM(document.getElementById("em"));await cam(document.getElementById("ev"));document.getElementById("em").innerHTML='<div class="msg">కొంచెం తల తిప్పుతూ 3 సార్లు capture చేయండి.</div>'}catch(x){document.getElementById("em").innerHTML='<div class="msg">'+(x.message||"Camera permission ఇవ్వండి")+'</div>'}}
+async function enrCap(){var m=document.getElementById("em");if(!stream)return;
+var d=await desc(document.getElementById("ev"));if(!d){m.innerHTML='<div class="msg">ముఖం కనిపించలేదు. వెలుతురు చూసుకోండి.</div>';return}
+enrD.push(d);if(enrD.length<3){m.innerHTML='<div class="msg">Captured '+enrD.length+'/3</div>';document.querySelector("#enr .btn").textContent="Face capture ("+enrD.length+"/3)";return}
+S.emps.forEach(function(e){if(e.id==enrId)e.fd=enrD});save();stopCam();document.getElementById("enr").innerHTML='<div class="msg">Face enroll పూర్తయింది ✔</div>';rStaff()}
+document.getElementById("rd").value=dk(Date.now());rPick();
+</script></body></html>
